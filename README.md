@@ -1,5 +1,5 @@
 # ghostfolio-goldensgs-ppr
-Integration for Golden SGF PPRs into ghostfolio.
+Integration for Golden SGF PPRs (portuguese "mutual funds") into ghostfolio.
 This project downloads the PPR history from the Golden SGF (https://goldensgf.pt/) website (only available as a xlsx excel file) and generates both json and html sample websites which can be then imported as manual scrapers into ghostfolio. Provides the latest UP value as well as all available historical data for each of the PPRs.
 
 A github action is set to update the output folder daily.
@@ -27,4 +27,5 @@ options:
 
 - Downloader from the golden sgf website
 - Github action
+- Add ghostfolio instructions
 
