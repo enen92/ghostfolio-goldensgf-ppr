@@ -34,9 +34,9 @@ def grab_history():
         history[key]["currentMarketPrice"]["value"] = most_recent_value
         history[key]["currentMarketPrice"]["date"] = most_recent_timestamp
 
-def generate_output(ppr_name: str, format: OutputFormat = OutputFormat.HTML):
+def generate_output(ppr_name: str, output_format: OutputFormat = OutputFormat.HTML):
     ppr_data = history.get(ppr_name, None)
-    if format == OutputFormat.HTML:
+    if output_format == OutputFormat.HTML:
         html_template = '''<!DOCTYPE html>
 <html>
 <head>
@@ -69,7 +69,8 @@ body { font-family: Arial; font-size: 0.3cm }
                 date=ppr_data["currentMarketPrice"]["date"].strftime("%Y-%m-%d"),
                 history=ppr_data["history"]
             )
-    elif format == OutputFormat.JSON:
+            write_output(ppr_name, output_format, output)
+    elif output_format == OutputFormat.JSON:
         output = {
             "title": ppr_name,
             "currentMarketPrice": {
@@ -78,8 +79,11 @@ body { font-family: Arial; font-size: 0.3cm }
             },
             "history": [(date.strftime("%Y-%m-%d"), value) for date, value in ppr_data["history"] ]
         }
-    with open(os.path.join("output", unicodedata.normalize('NFKD', f"{ppr_name.replace(' ', '').lower()}{'.json' if format == OutputFormat.JSON else '.html'}")).encode('ASCII', 'ignore').decode('utf-8'), "w") as f:
-        f.write(json.dumps(output))
+        write_output(ppr_name, output_format, json.dumps(output))
+
+def write_output(ppr_name: str, output_format: OutputFormat, payload: str):
+    with open(os.path.join("output", unicodedata.normalize('NFKD', f"{ppr_name.replace(' ', '').lower()}{'.json' if output_format == OutputFormat.JSON else '.html'}")).encode('ASCII', 'ignore').decode('utf-8'), "w") as f:
+            f.write(payload)
     
 
 if __name__ == "__main__":
@@ -103,4 +107,4 @@ if __name__ == "__main__":
     output_format = OutputFormat.JSON if args["output"] == "json" else OutputFormat.HTML
     for ppr in ppr_list:
         print(f"Generating for PPR: {ppr}")
-        generate_output(ppr, format=output_format)
+        generate_output(ppr, output_format=output_format)
