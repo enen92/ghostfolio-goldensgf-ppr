@@ -1,5 +1,8 @@
 name: Sync PPR data
-on: push
+on:
+  schedule:
+    - cron: '0 0 * * *'  # runs every day at midnight UTC
+  workflow_dispatch:  # allows manual triggering if needed
 permissions:
   contents: write
 jobs:
