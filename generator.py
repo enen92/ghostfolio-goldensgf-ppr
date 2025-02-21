@@ -19,6 +19,7 @@ LOCAL_FILE = "history.xlsx"
 class OutputFormat(Enum):
     HTML = 1
     JSON = 2
+    CSV = 3
 
 
 def download_file(url: str, local_filename: str = LOCAL_FILE):
@@ -80,8 +81,13 @@ def grab_history(filename: str = LOCAL_FILE):
 def generate_output(
         ppr_name: str,
         output_format: OutputFormat = OutputFormat.HTML):
+    file_name = unicodedata.normalize(
+        'NFKD',
+        f"{ppr_name.replace(' ', '').lower()}"
+    ).encode('ASCII', 'ignore').decode('utf-8')
     ppr_data = history.get(ppr_name, None)
     if output_format == OutputFormat.HTML:
+        file_extension = ".html"
         html_template = '''<!DOCTYPE html>
 <html>
 <head>
@@ -113,8 +119,9 @@ body { font-family: Arial; font-size: 0.3cm }
                 value=ppr_data["currentMarketPrice"]["value"],
                 date=ppr_data["currentMarketPrice"]["date"].strftime("%Y-%m-%d"),
                 history=ppr_data["history"])
-            write_output(ppr_name, output_format, output)
+            write_output(f"{file_name}{file_extension}", output)
     elif output_format == OutputFormat.JSON:
+        file_extension = ".json"
         output = {
             "title": ppr_name,
             "currentMarketPrice": {
@@ -124,11 +131,17 @@ body { font-family: Arial; font-size: 0.3cm }
                 (date.strftime("%Y-%m-%d"),
                  value) for date,
                 value in ppr_data["history"]]}
-        write_output(ppr_name, output_format, json.dumps(output))
+        write_output(f"{file_name}{file_extension}", json.dumps(output))
+    elif output_format == OutputFormat.CSV:
+        file_extension = ".csv"
+        output = ["date;marketPrice"]
+        output.extend(
+            [f"{date.strftime('%Y-%m-%d')};{value}" for date, value in ppr_data["history"]])
+        write_output(f"{file_name}{file_extension}", "\n".join(output))
 
 
-def write_output(ppr_name: str, output_format: OutputFormat, payload: str):
-    with open(os.path.join("output", unicodedata.normalize('NFKD', f"{ppr_name.replace(' ', '').lower()}{'.json' if output_format == OutputFormat.JSON else '.html'}")).encode('ASCII', 'ignore').decode('utf-8'), "w") as f:
+def write_output(file_name: str, payload: str):
+    with open(os.path.join("output", file_name), "w") as f:
         f.write(payload)
 
 
@@ -149,7 +162,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-o',
         '--output',
-        help='Output format ("json" or "html")',
+        help='Output format ("json", "html", "csv")',
         default="html",
         required=False)
     if len(sys.argv) == 1:
@@ -167,7 +180,11 @@ if __name__ == "__main__":
     # PPR list (or only selected ones)
     ppr_list = history.keys() if not args["ppr"] else [args["ppr"]]
     # Format
-    output_format = OutputFormat.JSON if args["output"] == "json" else OutputFormat.HTML
+    output_format = OutputFormat.HTML
+    if args["output"] == "json":
+        output_format = OutputFormat.JSON
+    elif args["output"] == "csv":
+        output_format = OutputFormat.CSV
     for ppr in ppr_list:
-        print(f"Generating for PPR: {ppr}")
+        print(f"Generating for PPR: {ppr} ({output_format})")
         generate_output(ppr, output_format=output_format)
