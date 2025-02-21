@@ -171,4 +171,5 @@ cython_debug/
 .pypirc
 
 # golden sgf xlsx file
-.xlsx
+*.xlsx
+.DS_Store
