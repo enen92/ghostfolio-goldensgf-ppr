@@ -5,17 +5,51 @@ import json
 import os
 import unicodedata
 import sys
+import urllib.request
+import time
 from openpyxl import load_workbook
 from jinja2 import Template
 
 history = {}
 
+GOLDEN_SGF_HISTORY_XSLS = "https://goldensgf.pt/wp-content/uploads/2024/08/HISTORICO-DE-COTACOES.xlsx"
+LOCAL_FILE = "history.xlsx"
+
 class OutputFormat(Enum):
     HTML = 1
     JSON = 2
 
-def grab_history():
-    wb = load_workbook(filename = 'history.xlsx')
+def download_file(url: str, local_filename : str = LOCAL_FILE):
+    with urllib.request.urlopen(url) as response, open(local_filename, 'wb') as out_file:
+        file_size = int(response.getheader('Content-Length', 0))
+        downloaded = 0
+        block_size = 8192  # 8 KB chunks
+        start_time = time.time()
+
+        while True:
+            buffer = response.read(block_size)
+            if not buffer:
+                break
+
+            downloaded += len(buffer)
+            out_file.write(buffer)
+
+            elapsed_time = time.time() - start_time
+            speed = downloaded / elapsed_time / 1024  # in KB/s
+            percent = downloaded * 100 / file_size if file_size else 0
+            print(
+                f"\rDownloaded: {downloaded / 1024:.2f} KB "
+                f"({percent:.2f}%) at {speed:.2f} KB/s", 
+                end=''
+            )
+    if file_size and downloaded < file_size:
+        print(f"Download incomplete: expected {file_size} bytes, got {downloaded} bytes")
+        return False
+    print("\nDownload complete!")
+    return True
+
+def grab_history(filename: str = LOCAL_FILE):
+    wb = load_workbook(filename)
     for sheet in wb:
         for row in sheet.iter_rows(min_row=2, max_col=3):
             ppr = row[0].value
@@ -95,6 +129,8 @@ if __name__ == "__main__":
         parser.print_help(sys.stderr)
         sys.exit(1)
     args = vars(parser.parse_args())
+    if not download_file(GOLDEN_SGF_HISTORY_XSLS):
+        sys.exit(1)
     grab_history()
     if args["list"]:
         print("Available options:")

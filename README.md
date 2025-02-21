@@ -25,7 +25,6 @@ options:
 
 ## TODO
 
-- Downloader from the golden sgf website
 - Github action
 - Add ghostfolio instructions
 
