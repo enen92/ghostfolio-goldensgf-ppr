@@ -15,11 +15,13 @@ history = {}
 GOLDEN_SGF_HISTORY_XSLS = "https://goldensgf.pt/wp-content/uploads/2024/08/HISTORICO-DE-COTACOES.xlsx"
 LOCAL_FILE = "history.xlsx"
 
+
 class OutputFormat(Enum):
     HTML = 1
     JSON = 2
 
-def download_file(url: str, local_filename : str = LOCAL_FILE):
+
+def download_file(url: str, local_filename: str = LOCAL_FILE):
     with urllib.request.urlopen(url) as response, open(local_filename, 'wb') as out_file:
         file_size = int(response.getheader('Content-Length', 0))
         downloaded = 0
@@ -39,14 +41,16 @@ def download_file(url: str, local_filename : str = LOCAL_FILE):
             percent = downloaded * 100 / file_size if file_size else 0
             print(
                 f"\rDownloaded: {downloaded / 1024:.2f} KB "
-                f"({percent:.2f}%) at {speed:.2f} KB/s", 
+                f"({percent:.2f}%) at {speed:.2f} KB/s",
                 end=''
             )
     if file_size and downloaded < file_size:
-        print(f"Download incomplete: expected {file_size} bytes, got {downloaded} bytes")
+        print(
+            f"Download incomplete: expected {file_size} bytes, got {downloaded} bytes")
         return False
     print("\nDownload complete!")
     return True
+
 
 def grab_history(filename: str = LOCAL_FILE):
     wb = load_workbook(filename)
@@ -58,7 +62,11 @@ def grab_history(filename: str = LOCAL_FILE):
             if not ppr or not value or not date:
                 continue
             if ppr not in history.keys():
-                history[ppr] = {"currentMarketPrice": {"value" : None, "date": None}, "history": []}
+                history[ppr] = {
+                    "currentMarketPrice": {
+                        "value": None,
+                        "date": None},
+                    "history": []}
             history[ppr]["history"].append((date, value))
 
     # sort by latest date
@@ -68,7 +76,10 @@ def grab_history(filename: str = LOCAL_FILE):
         history[key]["currentMarketPrice"]["value"] = most_recent_value
         history[key]["currentMarketPrice"]["date"] = most_recent_timestamp
 
-def generate_output(ppr_name: str, output_format: OutputFormat = OutputFormat.HTML):
+
+def generate_output(
+        ppr_name: str,
+        output_format: OutputFormat = OutputFormat.HTML):
     ppr_data = history.get(ppr_name, None)
     if output_format == OutputFormat.HTML:
         html_template = '''<!DOCTYPE html>
@@ -101,30 +112,46 @@ body { font-family: Arial; font-size: 0.3cm }
                 title=ppr_name,
                 value=ppr_data["currentMarketPrice"]["value"],
                 date=ppr_data["currentMarketPrice"]["date"].strftime("%Y-%m-%d"),
-                history=ppr_data["history"]
-            )
+                history=ppr_data["history"])
             write_output(ppr_name, output_format, output)
     elif output_format == OutputFormat.JSON:
         output = {
             "title": ppr_name,
             "currentMarketPrice": {
                 "value": ppr_data["currentMarketPrice"]["value"],
-                "date": ppr_data["currentMarketPrice"]["date"].strftime("%Y-%m-%d")
-            },
-            "history": [(date.strftime("%Y-%m-%d"), value) for date, value in ppr_data["history"] ]
-        }
+                "date": ppr_data["currentMarketPrice"]["date"].strftime("%Y-%m-%d")},
+            "history": [
+                (date.strftime("%Y-%m-%d"),
+                 value) for date,
+                value in ppr_data["history"]]}
         write_output(ppr_name, output_format, json.dumps(output))
+
 
 def write_output(ppr_name: str, output_format: OutputFormat, payload: str):
     with open(os.path.join("output", unicodedata.normalize('NFKD', f"{ppr_name.replace(' ', '').lower()}{'.json' if output_format == OutputFormat.JSON else '.html'}")).encode('ASCII', 'ignore').decode('utf-8'), "w") as f:
-            f.write(payload)
-    
+        f.write(payload)
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Simple graber for golden SGF PPR historical data. Usage:')
-    parser.add_argument('-p','--ppr', help='PPR name (e.g. "SGF DR FINANÇAS")', required=False)
-    parser.add_argument('-l','--list', help='List available PPRs', action='store_true', required=False)
-    parser.add_argument('-o','--output', help='Output format ("json" or "html")', default="html", required=False)
+    parser = argparse.ArgumentParser(
+        description='Simple graber for golden SGF PPR historical data. Usage:')
+    parser.add_argument(
+        '-p',
+        '--ppr',
+        help='PPR name (e.g. "SGF DR FINANÇAS")',
+        required=False)
+    parser.add_argument(
+        '-l',
+        '--list',
+        help='List available PPRs',
+        action='store_true',
+        required=False)
+    parser.add_argument(
+        '-o',
+        '--output',
+        help='Output format ("json" or "html")',
+        default="html",
+        required=False)
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
         sys.exit(1)
