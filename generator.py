@@ -20,6 +20,7 @@ class OutputFormat(Enum):
     HTML = 1
     JSON = 2
     CSV = 3
+    ALL = 4
 
 
 def download_file(url: str, local_filename: str = LOCAL_FILE):
@@ -162,8 +163,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '-o',
         '--output',
-        help='Output format ("json", "html", "csv")',
-        default="html",
+        help='Output format ("json", "html", "csv"). Use "all" for all.',
+        default="all",
         required=False)
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -180,11 +181,16 @@ if __name__ == "__main__":
     # PPR list (or only selected ones)
     ppr_list = history.keys() if not args["ppr"] else [args["ppr"]]
     # Format
-    output_format = OutputFormat.HTML
+    output_formats = []
     if args["output"] == "json":
-        output_format = OutputFormat.JSON
+        output_formats.append(OutputFormat.JSON)
     elif args["output"] == "csv":
-        output_format = OutputFormat.CSV
-    for ppr in ppr_list:
-        print(f"Generating for PPR: {ppr} ({output_format})")
-        generate_output(ppr, output_format=output_format)
+        output_formats.append(OutputFormat.CSV)
+    elif args["output"] == "html":
+        output_formats.append(OutputFormat.HTML)
+    else:
+        output_formats = [OutputFormat.JSON, OutputFormat.CSV, OutputFormat.HTML]
+    for output_format in output_formats:
+        for ppr in ppr_list:
+            print(f"Generating for PPR: {ppr} ({output_format})")
+            generate_output(ppr, output_format=output_format)
