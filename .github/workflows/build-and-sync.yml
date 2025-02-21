@@ -20,6 +20,7 @@ jobs:
         run: |
           git config --global user.name 'enenbot'
           git config --global user.email 'enenbot@users.noreply.github.com'
+          git config set advice.addIgnoredFile false
           git add *
           git commit -am "Automated report"
           git push
