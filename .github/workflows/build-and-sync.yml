@@ -7,8 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+            token: ${{ secrets.PAT }}
       - name: Install requirements
         run: pip install -r requirements.txt
       - name: Generate PPR data
         run: |
           python3 generator.py -o all
+      - name: Create report file
+        run: date +%s > report.txt
+      - name: Commit report
+        run: |
+          git config --global user.name 'enenbot'
+          git config --global user.email 'enenbot@users.noreply.github.com'
+          git add *
+          git commit -am "Automated report"
+          git push
