@@ -12,7 +12,7 @@ from jinja2 import Template
 
 history = {}
 
-GOLDEN_SGF_HISTORY_XSLS = "https://goldensgf.pt/wp-content/uploads/2024/08/HISTORICO-DE-COTACOES.xlsx"
+GOLDEN_SGF_HISTORY_XSLS = "https://goldensgf.pt/wp-content/uploads/2026/09/Historico-de-Cotacoes.xlsx"
 LOCAL_FILE = "history.xlsx"
 
 
